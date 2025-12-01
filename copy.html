@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Copy Link Mobile Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+    }
+    .share-wrapper {
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 400px;
+        margin: 40px auto;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .copy-btn {
+        display: inline-block;
+        padding: 12px 16px;
+        background: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 16px;
+    }
+    #toast {
+        visibility: hidden;
+        min-width: 150px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 12px;
+        position: fixed;
+        left: 50%;
+        bottom: 30px;
+        transform: translateX(-50%);
+        font-size: 15px;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.4s, visibility 0.4s;
+    }
+    #toast.show {
+        visibility: visible;
+        opacity: 1;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="share-wrapper">
+    <p><b>Mobile Copy Test</b></p>
+    <div>
+        <!-- Anchor tag inside a div – exactly like your case -->
+        <a href="#" id="copyLink" class="copy-btn">Copy Page URL</a>
+    </div>
+</div>
+
+<div id="toast">Copied!</div>
+
+<script>
+    const shareButtonCopy = document.getElementById("copyLink");
+
+    shareButtonCopy.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const currentLocation = window.location.href;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(currentLocation)
+                .then(() => showToast())
+                .catch(() => {
+                    fallbackCopy(currentLocation);
+                    showToast();
+                });
+        } else {
+            fallbackCopy(currentLocation);
+            showToast();
+        }
+
+        return false; // important for mobile browsers
+    });
+
+    function fallbackCopy(text) {
+        const tempInput = document.createElement('input');
+        tempInput.value = text;
+        tempInput.setAttribute('readonly', '');
+        tempInput.style.position = 'absolute';
+        tempInput.style.left = '-9999px';
+
+        document.body.appendChild(tempInput);
+
+        tempInput.select();
+        tempInput.setSelectionRange(0, 99999); // iOS support
+
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+    }
+
+    function showToast() {
+        const toast = document.getElementById("toast");
+        toast.classList.add("show");
+
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
