@@ -1,153 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Copy Link Mobile/Desktop Mock</title>
-<meta name="viewport" width="device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Copy Link Bottom Sheet Test</title>
+
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        padding: 20px;
-    }
+  body {
+    font-family: sans-serif;
+    padding: 20px;
+  }
 
-    .share-wrapper {
-        margin-top: 30px;
-    }
+  .open-modal-btn {
+    padding: 12px 20px;
+    background: #007bff;
+    color: white;
+    border-radius: 6px;
+    border: none;
+  }
 
-    .desktop-list, .mobile-list {
-        display: none;
-        margin-top: 15px;
-        padding: 12px;
-        border: 1px solid #aaa;
-        border-radius: 6px;
-    }
+  /* --- Backdrop --- */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .3s ease;
+  }
+  .backdrop.show {
+    opacity: 1;
+    visibility: visible;
+  }
 
-    .desktop-list.open {
-        display: block;
-    }
+  /* --- Bottom sheet modal --- */
+  .bottom-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: -60%;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    min-height: 40%;
+    transition: bottom .35s ease;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+  }
 
-    /* Modal Style for Mobile */
-    .modal {
-        position: fixed;
-        left: 0; top: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.4);
-        display: none;
-        justify-content: flex-end;
-    }
+  .bottom-sheet.open {
+    bottom: 0;
+  }
 
-    .modal.open {
-        display: flex;
-    }
+  .sheet-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 14px 10px;
+    border-bottom: 1px solid #eee;
+  }
 
-    .modal-inner {
-        background: white;
-        padding: 20px;
-        width: 100%;
-        border-top-left-radius: 14px;
-        border-top-right-radius: 14px;
-    }
-
-    a.button {
-        display: block;
-        padding: 12px;
-        background: #eee;
-        border-radius: 5px;
-        margin-bottom: 10px;
-        text-decoration: none;
-        color: #000;
-    }
+  /* Fake toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: black;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .toast.show {
+    opacity: 1;
+  }
 </style>
 </head>
+
 <body>
 
-<h2>Mock: Copy Link Test for Mobile & Desktop</h2>
-<p>Resize screen to trigger mobile modal version.</p>
+<h3>Bottom Sheet Copy Link Test</h3>
+<button class="open-modal-btn">Open Share Options</button>
 
-<div class="share-wrapper">
-    <button id="shareBtn">SHARE</button>
+<!-- Backdrop -->
+<div class="backdrop"></div>
 
-    <!-- Desktop List -->
-    <div class="desktop-list" id="desktopList">
-        <a href="#" class="button cmp-heroItinerary__itineraryContainer-pills--copyLinkButton">Copy link</a>
-        <a href="#" class="button">Share via Email</a>
-        <a href="#" class="button">Facebook</a>
-    </div>
+<!-- Bottom Sheet -->
+<div class="bottom-sheet" id="bottomSheet">
+  <a href="#" id="copyBtn" class="sheet-btn">Copy Link</a>
+  <button class="sheet-btn" onclick="closeSheet()">Close</button>
 </div>
 
-
-<!-- MOBILE MODAL (lazy loaded by JS when share button tapped on small screens) -->
-<div class="modal" id="mobileModal">
-    <div class="modal-inner">
-        <h3>Share</h3>
-        <div class="mobile-list" id="mobileList">
-            <a href="#" class="button cmp-heroItinerary__itineraryContainer-pills--copyLinkButton">Copy link</a>
-            <a href="#" class="button">Share via Email</a>
-            <a href="#" class="button">Facebook</a>
-        </div>
-        <button id="closeModal">Close</button>
-    </div>
-</div>
+<div class="toast" id="toast">Link Copied!</div>
 
 <script>
-/* ---------------------------
-   1. Toggle between desktop / mobile drawer
------------------------------- */
+  const openBtn = document.querySelector('.open-modal-btn');
+  const sheet = document.getElementById('bottomSheet');
+  const backdrop = document.querySelector('.backdrop');
+  const toast = document.getElementById('toast');
 
-const shareBtn = document.getElementById('shareBtn');
-const desktopList = document.getElementById('desktopList');
-const mobileModal = document.getElementById('mobileModal');
-const closeModal = document.getElementById('closeModal');
+  const copyBtn = document.getElementById('copyBtn');
 
-shareBtn.addEventListener('click', () => {
-    if (window.innerWidth >= 768) {
-        desktopList.classList.toggle('open');
+  openBtn.onclick = () => {
+    sheet.classList.add('open');
+    backdrop.classList.add('show');
+  };
+
+  function closeSheet() {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('show');
+  }
+
+  backdrop.onclick = closeSheet;
+
+  // Copy logic
+  copyBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const url = window.location.href;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url)
+        .then(showToast)
+        .catch(() => fallbackCopy(url));
     } else {
-        mobileModal.classList.add('open');
-    }
-});
-
-closeModal.addEventListener('click', () => {
-    mobileModal.classList.remove('open');
-});
-
-/* ---------------------------
-   2. COPY LINK HANDLER (delegated)
------------------------------- */
-
-document.addEventListener('click', (event) => {
-    const btn = event.target.closest('.cmp-heroItinerary__itineraryContainer-pills--copyLinkButton');
-    if (!btn) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const currentLocation = window.location.href;
-
-    if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(currentLocation).catch(() => fallbackCopy(currentLocation));
-    } else {
-        fallbackCopy(currentLocation);
+      fallbackCopy(url);
     }
 
-    alert("Copied URL: " + currentLocation);
-    return false;
-});
+    return false; // Important for iOS Safari when <a href="#">
+  });
 
-function fallbackCopy(text) {
-    const temp = document.createElement('input');
-    temp.value = text;
-    temp.setAttribute('readonly', '');
-    temp.style.position = 'absolute';
-    temp.style.left = '-9999px';
+  function fallbackCopy(text) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    tempInput.setAttribute('readonly', '');
+    tempInput.style.position = 'absolute';
+    tempInput.style.left = '-9999px';
 
-    document.body.appendChild(temp);
+    document.body.appendChild(tempInput);
 
-    temp.select();
-    temp.setSelectionRange(0, 99999);
+    tempInput.select();
+    tempInput.setSelectionRange(0, 99999);
 
     document.execCommand('copy');
-    document.body.removeChild(temp);
-}
+    document.body.removeChild(tempInput);
+
+    showToast();
+  }
+
+  function showToast() {
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1500);
+  }
 </script>
 
 </body>
