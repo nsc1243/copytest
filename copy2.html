@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  .modal {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border-top: 2px solid #ddd;
+    padding: 20px;
+  }
+  .modal.open {
+    display: block;
+  }
+  .cmp-heroItinerary__itineraryContainer-share-linksList a {
+    display: block;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #eee;
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+
+<h2>Mock AEM Share Modal</h2>
+
+<button id="openModal">Open Share Modal</button>
+
+<div id="shareModal" class="modal">
+  <h3>Share Options</h3>
+
+  <div class="cmp-heroItinerary__itineraryContainer-share-linksList">
+
+    <!-- COPY LINK BUTTON (exact same class as AEM) -->
+    <a href="#" 
+       class="cmp-heroItinerary__itineraryContainer-pills--generalButton 
+              cmp-heroItinerary__itineraryContainer-pills--copyLinkButton">
+      Copy link
+    </a>
+
+    <a href="mailto:?subject=test&body=test">
+      Email
+    </a>
+
+    <a href="https://www.facebook.com/sharer/sharer.php?u=https://example.com" target="_blank">
+      Facebook
+    </a>
+
+  </div>
+</div>
+
+<script>
+  // ----- open modal -----
+  document.getElementById("openModal").addEventListener("click", () => {
+    document.getElementById("shareModal").classList.add("open");
+  });
+
+  // ----- copy link listener -----
+  function attachCopyListener() {
+    const copyBtn = document.querySelector('.cmp-heroItinerary__itineraryContainer-pills--copyLinkButton');
+
+    if (!copyBtn) {
+      setTimeout(attachCopyListener, 100);
+      return;
+    }
+
+    copyBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const currentLocation = window.location.href;
+
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(currentLocation)
+          .catch(() => fallbackCopy(currentLocation));
+      } else {
+        fallbackCopy(currentLocation);
+      }
+
+      alert("Copied: " + currentLocation);
+      return false;
+    });
+  }
+
+  // fallback (iOS friendly)
+  function fallbackCopy(text) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    tempInput.setAttribute('readonly', '');
+    tempInput.style.position = 'absolute';
+    tempInput.style.left = '-9999px';
+
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    tempInput.setSelectionRange(0, 99999); 
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+  }
+
+  // attach listener on load
+  attachCopyListener();
+</script>
+
+</body>
+</html>
